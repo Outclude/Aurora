@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激光配速带控制</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header -->
+        <header class="header">
+            <div class="device-info">
+                <i class="ph ph-watch"></i>
+                <span>激光配速带</span>
+            </div>
+            <div class="connection-status connected">
+                <span class="status-text">已连接</span>
+                <i class="ph-fill ph-bluetooth-connected"></i>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard">
+            <!-- Status Card -->
+            <div class="card status-card">
+                <div class="pace-group">
+                    <label>实时配速</label>
+                    <div class="value-large">
+                        <span id="currentPace">5'30"</span>
+                        <span class="unit">/km</span>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="pace-group target-group">
+                    <label>目标配速</label>
+                    <div class="value-editable">
+                        <i class="ph ph-pencil-simple"></i>
+                        <span id="targetPaceDisplay">5'00"</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="card visualizer-card">
+                <div class="visualizer-header">
+                    <span>相对位置</span>
+                    <i class="ph ph-info"></i>
+                </div>
+                <div class="track-container">
+                    <div class="track-line"></div>
+                    <div class="indicator center-marker" title="你 (跑者)">
+                        <div class="dot runner-dot"></div>
+                    </div>
+                    <div class="indicator rabbit-marker" id="rabbitIndicator" title="激光 (兔子)">
+                        <div class="dot rabbit-dot"></div>
+                        <div class="rabbit-glow"></div>
+                    </div>
+                </div>
+                <div class="visualizer-labels">
+                    <span>落后</span>
+                    <span>领先</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="control-section">
+                <button id="toggleBtn" class="btn-primary">
+                    <span class="btn-content">
+                        <i class="ph-fill ph-play" id="btnIcon"></i>
+                        <span id="btnText">开始跟随</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Mode Switcher -->
+            <div class="mode-switcher">
+                <div class="mode-option active" data-mode="steady">
+                    <i class="ph ph-person-simple-run"></i>
+                    <span>定速巡航</span>
+                </div>
+                <div class="mode-option" data-mode="interval">
+                    <i class="ph ph-chart-bar"></i>
+                    <span>间歇训练</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Settings -->
+        <footer class="settings-list">
+            <div class="list-item">
+                <div class="item-left">
+                    <i class="ph ph-list-numbers"></i>
+                    <span>配速预设</span>
+                </div>
+                <i class="ph ph-caret-right"></i>
+            </div>
+            <div class="list-item">
+                <div class="item-left">
+                    <i class="ph ph-gear"></i>
+                    <span>设备设置</span>
+                </div>
+                <i class="ph ph-caret-right"></i>
+            </div>
+            <div class="list-item">
+                <div class="item-left">
+                    <i class="ph ph-book-open"></i>
+                    <span>用户指南</span>
+                </div>
+                <i class="ph ph-caret-right"></i>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

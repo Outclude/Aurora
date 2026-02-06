@@ -1,0 +1,341 @@
+:root {
+    --bg-color: #000000;
+    --card-bg: #1E1E1E;
+    --text-main: #FFFFFF;
+    --text-muted: #888888;
+    --accent-orange: #FF6B35;
+    --header-gradient-start: #4A2C1A;
+    --divider-color: #2A2A2A;
+    --font-stack: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: var(--font-stack);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px; /* Mobile simulation */
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Header */
+.header {
+    height: 120px;
+    padding: 24px;
+    background: linear-gradient(180deg, var(--header-gradient-start) 0%, var(--bg-color) 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.device-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.connection-status.connected {
+    color: var(--accent-orange);
+}
+
+/* Dashboard */
+.dashboard {
+    padding: 0 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+/* Status Card */
+.status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pace-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pace-group label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.value-large {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+}
+
+.value-large .unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.divider {
+    width: 1px;
+    height: 50px;
+    background-color: var(--divider-color);
+}
+
+.target-group {
+    align-items: flex-end;
+}
+
+.value-editable {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.value-editable:hover {
+    opacity: 0.8;
+}
+
+.value-editable i {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+/* Visualizer */
+.visualizer-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.visualizer-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.track-container {
+    height: 60px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.track-line {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        rgba(255,255,255,0.1) 0%, 
+        rgba(255,255,255,0.5) 50%, 
+        rgba(255,255,255,0.1) 100%);
+    border-radius: 1px;
+}
+
+.indicator {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.center-marker {
+    left: 50%;
+    z-index: 2;
+}
+
+.runner-dot {
+    width: 12px;
+    height: 12px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+.rabbit-marker {
+    left: 50%; /* Starts at center */
+    z-index: 1;
+}
+
+.rabbit-dot {
+    width: 16px;
+    height: 16px;
+    background-color: var(--accent-orange);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--accent-orange);
+}
+
+.rabbit-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(255,107,53,0.2) 0%, rgba(255,107,53,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.visualizer-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* Controls */
+.control-section {
+    margin-top: 10px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 18px;
+    border-radius: 30px;
+    border: none;
+    background-color: var(--accent-orange);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+    filter: brightness(0.9);
+}
+
+.btn-primary.stopping {
+    background-color: #2A2A2A;
+    color: #FF6B35;
+    box-shadow: none;
+    border: 1px solid #FF6B35;
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Mode Switcher */
+.mode-switcher {
+    display: flex;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 4px;
+    margin-top: 10px;
+}
+
+.mode-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-option.active {
+    background-color: var(--accent-orange);
+    color: white;
+    font-weight: 500;
+}
+
+/* Footer Settings */
+.settings-list {
+    margin-top: 30px;
+    padding: 0 20px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.list-item:hover {
+    background-color: #2A2A2A;
+}
+
+.item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+}
+
+.item-left i {
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+.list-item > i {
+    color: var(--text-muted);
+    font-size: 14px;
+}
