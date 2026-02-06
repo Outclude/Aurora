@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const currentPaceEl = document.getElementById('currentPace');
     const targetPaceDisplay = document.getElementById('targetPaceDisplay');
+    const totalDistanceEl = document.getElementById('totalDistance');
+    const totalTimeEl = document.getElementById('totalTime');
     const rabbitIndicator = document.getElementById('rabbitIndicator');
     const toggleBtn = document.getElementById('toggleBtn');
     const iconPlay = document.getElementById('icon-play');
@@ -13,105 +15,83 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRunning = false;
     let targetPaceSeconds = 300; // 5'00" per km
     let currentPaceSeconds = 0;
-    let intervalId = null;
+    
+    // Simulator Instance
+    let simulator = null;
+    if (typeof PaceSimulator !== 'undefined') {
+        simulator = new PaceSimulator();
+        simulator.setUpdateCallback(onSimulationUpdate);
+    }
 
     // Helper: Seconds to MM'SS" format
     function formatPace(seconds) {
+        if (seconds === 0 || !isFinite(seconds)) return "--'--\"";
         const m = Math.floor(seconds / 60);
         const s = Math.floor(seconds % 60);
         return `${m}'${s.toString().padStart(2, '0')}"`;
     }
 
-    // Helper: Parse MM'SS" to seconds (if needed, simplified here)
-    
-    // Simulation Logic
+    // Helper: Format Duration HH:MM:SS
+    function formatDuration(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Callback from Simulator
+    function onSimulationUpdate(data) {
+        // Update local state for UI logic if needed
+        currentPaceSeconds = data.currentPace;
+        targetPaceSeconds = data.targetPace; // Sync back if simulator changes it
+
+        // Update UI Elements
+        currentPaceEl.textContent = formatPace(data.currentPace);
+        if (totalDistanceEl) totalDistanceEl.textContent = data.totalDistance.toFixed(2);
+        if (totalTimeEl) totalTimeEl.textContent = formatDuration(data.elapsedTime);
+
+        updateVisualizer(data.currentPace, data.targetPace);
+    }
+
+    function updateVisualizer(currentPace, targetPace) {
+        // Visualizer Logic
+        // Slower (High Pace Value) -> Rabbit Moves Right (Away)
+        // Faster (Low Pace Value) -> Rabbit Moves Left (Towards Center)
+        
+        const delta = currentPace - targetPace;
+        const pxPerSecond = 1.5; // Sensitivity
+        let offset = delta * pxPerSecond; 
+        
+        // Clamp offset
+        offset = Math.max(-45, Math.min(45, offset));
+        
+        rabbitIndicator.style.left = `calc(50% + ${offset}%)`;
+    }
+
     function startSimulation() {
+        if (simulator) {
+            simulator.setTargetPace(targetPaceSeconds);
+            simulator.start();
+        }
         isRunning = true;
         updateButtonStyle();
-        
-        // Initial current pace (start slow)
-        currentPaceSeconds = targetPaceSeconds + 30; // 5'30"
-
-        intervalId = setInterval(() => {
-            // Simulate pace fluctuation
-            // If we are "running", we try to stay near target, but fluctuate
-            const fluctuation = (Math.random() - 0.5) * 4; // +/- 2 seconds change
-            
-            // Tendency to move towards target pace over time
-            const diff = targetPaceSeconds - currentPaceSeconds;
-            currentPaceSeconds += diff * 0.05 + fluctuation;
-
-            updateUI();
-        }, 1000);
     }
 
     function stopSimulation() {
+        if (simulator) {
+            simulator.stop();
+        }
         isRunning = false;
-        clearInterval(intervalId);
         updateButtonStyle();
+        
         // Reset Visuals
         currentPaceSeconds = 0;
         rabbitIndicator.style.left = '50%';
         currentPaceEl.textContent = "--'--\"";
-    }
-
-    function updateUI() {
-        // Update Pace Display
-        currentPaceEl.textContent = formatPace(currentPaceSeconds);
-
-        // Update Visualizer
-        // Logic: Runner Speed > Target Speed => Rabbit Closer to Center.
-        // Pace (Time/Distance): Lower is Faster.
-        // Delta = CurrentPace - TargetPace
-        // If Current(4'50") < Target(5'00") -> Faster -> Delta is Negative (-10s).
-        // If Current(5'10") > Target(5'00") -> Slower -> Delta is Positive (+10s).
-        
-        // Prompt: "Runner speed > Target speed -> Orange indicator (Rabbit) closer to center"
-        // Interpretation: 
-        // If I am Slower (Delta > 0), Rabbit moves AWAY (Forward/Right).
-        // If I am Faster (Delta < 0), Rabbit moves CLOSER (Center/Left).
-        // Let's map Delta to Position.
-        // Center is 50%.
-        // Max range: +/- 30 seconds difference?
-        
-        const delta = currentPaceSeconds - targetPaceSeconds;
-        
-        // Sensitivity factor
-        const pxPerSecond = 1.5; // % per second difference
-        
-        // If Delta is Positive (Slower), Offset should be Positive (Away/Right).
-        // If Delta is Negative (Faster), Offset should be Negative (Towards Center? No wait).
-        
-        // The Rabbit is the Target.
-        // If I am Slower, Rabbit is Ahead (Right). Offset > 0.
-        // If I am Faster, Rabbit is Behind (Left). Offset < 0.
-        // Wait, "Closer to center".
-        // The Rabbit IS the indicator.
-        // If I am Slower, Rabbit is Ahead (Far from center).
-        // If I am Faster, Rabbit is Behind (Far from center on the other side? or just closer?)
-        
-        // Prompt specific logic: "Runner speed > Target speed -> Orange indicator (Rabbit) closer to center (represents Runner); else away."
-        // This implies the distance from center represents the "Lag" or "Lead".
-        // BUT, it explicitly says "closer to center" when faster.
-        // This might imply the Rabbit is *always* ahead, and running faster makes it appear closer?
-        // Let's implement: Slower -> Rabbit Moves Right (Away). Faster -> Rabbit Moves Left (Towards Center).
-        
-        let offset = delta * pxPerSecond; 
-        
-        // Clamp offset to keep inside track (approx +/- 45%)
-        offset = Math.max(-45, Math.min(45, offset));
-        
-        // Visual Position: Center (50%) + Offset
-        // If Slower (+10s) -> 50 + 15 = 65% (Right/Ahead).
-        // If Faster (-10s) -> 50 - 15 = 35% (Left/Behind).
-        // If Matched (0s) -> 50% (Center/Overlapped).
-        
-        // However, prompt says "Runner speed > Target speed ... closer to center".
-        // If I am super fast, I overtake. Rabbit is behind.
-        // If I am matched, Rabbit is at center.
-        // This works.
-        
-        rabbitIndicator.style.left = `calc(50% + ${offset}%)`;
     }
 
     function updateButtonStyle() {
@@ -129,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event Listeners
+    /* 
     toggleBtn.addEventListener('click', () => {
         if (isRunning) {
             stopSimulation();
@@ -144,13 +125,109 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Editable Target Pace (Simple toggle for prototype)
+    // Editable Target Pace
     targetPaceDisplay.parentElement.addEventListener('click', () => {
-        // Cycle through a few presets for demo
         const presets = [300, 270, 330, 360]; // 5'00", 4'30", 5'30", 6'00"
         const currentIndex = presets.indexOf(targetPaceSeconds);
         const nextIndex = (currentIndex + 1) % presets.length;
+        
         targetPaceSeconds = presets[nextIndex];
         targetPaceDisplay.textContent = formatPace(targetPaceSeconds);
+        
+        // Update simulator if running
+        if (simulator && isRunning) {
+            simulator.setTargetPace(targetPaceSeconds);
+        }
+    });
+    */
+
+    // --- Device Scanning Logic ---
+    const scanBtn = document.getElementById('scanBtn');
+    const scanModal = document.getElementById('scanModal');
+    const closeBtn = scanModal ? scanModal.querySelector('.close-btn') : null;
+    const refreshScanBtn = document.getElementById('refreshScanBtn');
+    const deviceList = document.getElementById('deviceList');
+    const scanLoading = document.getElementById('scanLoading');
+
+    function openModal() {
+        if (scanModal) {
+            scanModal.style.display = 'flex';
+            startScan();
+        }
+    }
+
+    function closeModal() {
+        if (scanModal) {
+            scanModal.style.display = 'none';
+        }
+    }
+
+    async function startScan() {
+        if (!deviceList || !scanLoading) return;
+        
+        // Clear list and show loading
+        deviceList.innerHTML = '';
+        scanLoading.style.display = 'flex';
+        if (refreshScanBtn) refreshScanBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/scan-ble');
+            if (!response.ok) throw new Error('Network response was not ok');
+            const devices = await response.json();
+            
+            if (devices.error) {
+                throw new Error(devices.error);
+            }
+            
+            renderDevices(devices);
+        } catch (error) {
+            console.error('Scan failed:', error);
+            deviceList.innerHTML = `<li class="device-item" style="color: var(--accent-orange); justify-content: center;">扫描失败: ${error.message}</li>`;
+        } finally {
+            scanLoading.style.display = 'none';
+            if (refreshScanBtn) refreshScanBtn.disabled = false;
+        }
+    }
+
+    function renderDevices(devices) {
+        if (!devices || devices.length === 0) {
+            deviceList.innerHTML = '<li class="device-item" style="justify-content: center; color: var(--text-muted);">未发现设备</li>';
+            return;
+        }
+
+        devices.forEach(device => {
+            const li = document.createElement('li');
+            li.className = 'device-item';
+            li.innerHTML = `
+                <div class="device-info-text">
+                    <span class="device-name">${device.name}</span>
+                    <span class="device-address">${device.address}</span>
+                </div>
+                <span class="device-rssi">${device.rssi} dBm</span>
+            `;
+            // Click to select/connect (Placeholder)
+            li.addEventListener('click', () => {
+                alert(`选择了设备: ${device.name}\n地址: ${device.address}`);
+                closeModal();
+            });
+            deviceList.appendChild(li);
+        });
+    }
+
+    if (scanBtn) {
+        scanBtn.addEventListener('click', openModal);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    if (refreshScanBtn) {
+        refreshScanBtn.addEventListener('click', startScan);
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === scanModal) {
+            closeModal();
+        }
     });
 });
