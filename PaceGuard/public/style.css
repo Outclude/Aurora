@@ -37,8 +37,8 @@ body {
 
 /* Header */
 .header {
-    height: 120px;
-    padding: 24px;
+    height: 80px;
+    padding: 16px;
     background: linear-gradient(180deg, var(--header-gradient-start) 0%, var(--bg-color) 100%);
     display: flex;
     justify-content: space-between;
@@ -53,6 +53,9 @@ body {
     font-weight: 500;
     color: var(--text-main);
 }
+.device-info svg {
+    font-size: 20px;
+}
 
 .connection-status {
     display: flex;
@@ -61,6 +64,9 @@ body {
     font-size: 12px;
     color: var(--text-muted);
 }
+.connection-status svg {
+    font-size: 16px;
+}
 
 .connection-status.connected {
     color: var(--accent-orange);
@@ -68,17 +74,17 @@ body {
 
 /* Dashboard */
 .dashboard {
-    padding: 0 20px;
+    padding: 0 16px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .card {
     background-color: var(--card-bg);
     border-radius: 16px;
-    padding: 20px;
+    padding: 16px;
 }
 
 /* Status Card */
@@ -102,7 +108,7 @@ body {
 }
 
 .value-large {
-    font-size: 40px;
+    font-size: 32px;
     font-weight: 700;
     line-height: 1;
     display: flex;
@@ -110,7 +116,7 @@ body {
 }
 
 .value-large .unit {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 400;
     color: var(--text-muted);
     margin-left: 4px;
@@ -118,7 +124,7 @@ body {
 
 .divider {
     width: 1px;
-    height: 50px;
+    height: 40px;
     background-color: var(--divider-color);
 }
 
@@ -130,7 +136,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 500;
     color: var(--text-main);
     cursor: pointer;
@@ -141,7 +147,7 @@ body {
     opacity: 0.8;
 }
 
-.value-editable i {
+.value-editable svg {
     font-size: 16px;
     color: var(--text-muted);
 }
@@ -150,18 +156,21 @@ body {
 .visualizer-card {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .visualizer-header {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-muted);
+}
+.visualizer-header svg {
+    font-size: 14px;
 }
 
 .track-container {
-    height: 60px;
+    height: 48px;
     position: relative;
     display: flex;
     align-items: center;
@@ -233,13 +242,13 @@ body {
 
 /* Controls */
 .control-section {
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .btn-primary {
     width: 100%;
-    padding: 18px;
-    border-radius: 30px;
+    padding: 14px;
+    border-radius: 24px;
     border: none;
     background-color: var(--accent-orange);
     color: white;
@@ -249,6 +258,9 @@ body {
     cursor: pointer;
     transition: transform 0.1s, filter 0.2s;
     box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+}
+.btn-primary svg {
+    font-size: 20px;
 }
 
 .btn-primary:active {
@@ -267,7 +279,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 /* Mode Switcher */
@@ -276,7 +288,7 @@ body {
     background-color: var(--card-bg);
     border-radius: 12px;
     padding: 4px;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .mode-option {
@@ -284,13 +296,16 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 14px;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.3s ease;
+}
+.mode-option svg {
+    font-size: 16px;
 }
 
 .mode-option.active {
@@ -301,11 +316,11 @@ body {
 
 /* Footer Settings */
 .settings-list {
-    margin-top: 30px;
-    padding: 0 20px 40px;
+    margin-top: 20px;
+    padding: 0 16px 30px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .list-item {
@@ -313,7 +328,7 @@ body {
     align-items: center;
     justify-content: space-between;
     background-color: var(--card-bg);
-    padding: 16px 20px;
+    padding: 12px 16px;
     border-radius: 12px;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -326,16 +341,36 @@ body {
 .item-left {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 15px;
+    gap: 10px;
+    font-size: 14px;
 }
 
-.item-left i {
-    font-size: 20px;
+.item-left svg {
+    font-size: 18px;
     color: var(--text-muted);
 }
 
-.list-item > i {
+.list-item > svg {
     color: var(--text-muted);
     font-size: 14px;
+}
+
+/* SVG Icons Support */
+svg[class*="ph-"] {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+    fill: currentColor;
+}
+/* Ensure strokes are handled if regular style */
+svg.ph path, svg.ph line, svg.ph circle, svg.ph polyline, svg.ph rect {
+    stroke: currentColor;
+    stroke-width: 16px; /* Phosphor regular uses 16px stroke on 256px viewbox usually */
+    fill: none;
+}
+/* Fill style override */
+svg.ph-fill path, svg.ph-fill line, svg.ph-fill circle, svg.ph-fill polyline, svg.ph-fill rect {
+    fill: currentColor;
+    stroke: none;
 }

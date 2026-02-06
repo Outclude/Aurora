@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetPaceDisplay = document.getElementById('targetPaceDisplay');
     const rabbitIndicator = document.getElementById('rabbitIndicator');
     const toggleBtn = document.getElementById('toggleBtn');
-    const btnIcon = document.getElementById('btnIcon');
+    const iconPlay = document.getElementById('icon-play');
+    const iconStop = document.getElementById('icon-stop');
     const btnText = document.getElementById('btnText');
     const modeOptions = document.querySelectorAll('.mode-option');
 
@@ -117,11 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRunning) {
             toggleBtn.classList.add('stopping');
             btnText.textContent = "停止跟随";
-            btnIcon.classList.replace('ph-play', 'ph-stop');
+            iconPlay.style.display = 'none';
+            iconStop.style.display = 'block';
         } else {
             toggleBtn.classList.remove('stopping');
             btnText.textContent = "开始跟随";
-            btnIcon.classList.replace('ph-stop', 'ph-play');
+            iconPlay.style.display = 'block';
+            iconStop.style.display = 'none';
         }
     }
 
