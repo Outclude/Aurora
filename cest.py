@@ -4,7 +4,7 @@ import json
 from bleak import BleakClient
 
 # 配置信息
-ADDRESS = "84:1F:E8:8D:C9:D6"
+ADDRESS = "14:33:5C:C1:3D:B2"
 UART_RX_CHAR_UUID = "0000FFF1-0000-1000-8000-00805F9B34FB"
 UART_TX_CHAR_UUID = "0000FFF2-0000-1000-8000-00805F9B34FB"
 
@@ -13,7 +13,7 @@ UART_TX_CHAR_UUID = "0000FFF2-0000-1000-8000-00805F9B34FB"
 # ==========================================
 JSON_PAYLOAD = {
     "type": "message",
-    "content": "Hello from PC",
+    "content": "PCPCPCPCPC",
     "id": 1
 }
 # ==========================================

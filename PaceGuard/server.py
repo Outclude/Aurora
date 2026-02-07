@@ -18,6 +18,7 @@ class BLEManager:
         self.loop = asyncio.new_event_loop()
         self.client = None
         self.connected = False
+        self.device_name = None
         self.msg_queue = queue.Queue()
         self.thread = threading.Thread(target=self._run_loop, daemon=True)
         self.thread.start()
@@ -26,10 +27,11 @@ class BLEManager:
         asyncio.set_event_loop(self.loop)
         self.loop.run_forever()
         
-    def connect(self, address):
+    def connect(self, address, name=None):
         if self.connected and self.client:
              # Already connected
              return True
+        self.device_name = name
         future = asyncio.run_coroutine_threadsafe(self._connect(address), self.loop)
         try:
             return future.result(timeout=10) # 10s timeout
@@ -98,6 +100,7 @@ class BLEManager:
             except:
                 pass
         self.connected = False
+        self.device_name = None
         print("Disconnected")
 
 ble_manager = BLEManager()
@@ -106,12 +109,13 @@ ble_manager = BLEManager()
 def connect_device():
     data = request.json
     address = data.get('address')
+    name = data.get('name')
     if not address:
         return jsonify({"error": "Address required"}), 400
     
-    success = ble_manager.connect(address)
+    success = ble_manager.connect(address, name)
     if success:
-        return jsonify({"status": "connected", "address": address})
+        return jsonify({"status": "connected", "address": address, "name": name})
     else:
         return jsonify({"error": "Connection failed"}), 500
 
@@ -140,7 +144,7 @@ def get_messages():
 
 @app.route('/api/status', methods=['GET'])
 def connection_status():
-    return jsonify({"connected": ble_manager.connected})
+    return jsonify({"connected": ble_manager.connected, "name": ble_manager.device_name})
 
 # Existing scanning logic
 async def scan_ble_devices_async():
