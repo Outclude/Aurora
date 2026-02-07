@@ -33,16 +33,16 @@
                 <div class="setting-item">
                     <label>步频 (步/分钟)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="cadenceInput" value="180" placeholder="180">
+                        <input type="number" id="cadenceInput" value="180" placeholder="180" min="1">
                         <span class="unit">SPM</span>
                     </div>
                 </div>
                 <div class="setting-item">
                     <label>配速 (min'sec''/km)</label>
                     <div class="pace-input-wrapper">
-                        <input type="number" id="paceMinInput" value="5" placeholder="5">
+                        <input type="number" id="paceMinInput" value="5" placeholder="5" min="0">
                         <span class="separator">'</span>
-                        <input type="number" id="paceSecInput" value="30" placeholder="30">
+                        <input type="number" id="paceSecInput" value="30" placeholder="30" min="0" max="59">
                         <span class="separator">''</span>
                     </div>
                 </div>

@@ -29,6 +29,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let pollInterval = null;
     let isConnected = false;
 
+    // Check initial connection status
+    async function checkInitialStatus() {
+        try {
+            const response = await fetch('/api/status');
+            const status = await response.json();
+            
+            if (status.connected) {
+                console.log('Restoring connection session:', status);
+                isConnected = true;
+                if (statusText) statusText.textContent = status.name || '已连接设备';
+                updateConnectionUI(true);
+                appendSystemMessage('已恢复连接。');
+                startPolling();
+            }
+        } catch (error) {
+            console.error('Failed to check initial status:', error);
+        }
+    }
+    
+    // Call it on load
+    checkInitialStatus();
+
     // --- Modal Logic ---
     function openModal() {
         if (scanModal) {
@@ -104,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: device.address })
+                body: JSON.stringify({ address: device.address, name: device.name })
             });
             const result = await response.json();
 
@@ -322,6 +344,44 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+    }
+
+    // Input Validation
+    function validateInput(input, min, max) {
+        input.addEventListener('change', () => {
+            let val = parseInt(input.value, 10);
+            if (isNaN(val)) val = min;
+            if (val < min) val = min;
+            if (max !== undefined && val > max) val = max;
+            input.value = val;
+        });
+    }
+
+    if (cadenceInput) validateInput(cadenceInput, 1);
+    
+    // Pace validation: allow 0, but check combined > 0
+    function validatePace() {
+        let min = parseInt(paceMinInput.value, 10) || 0;
+        let sec = parseInt(paceSecInput.value, 10) || 0;
+        
+        // Basic range check first
+        if (min < 0) { min = 0; paceMinInput.value = 0; }
+        if (sec < 0) { sec = 0; paceSecInput.value = 0; }
+        if (sec > 59) { sec = 59; paceSecInput.value = 59; }
+
+        // Combined check
+        if (min === 0 && sec === 0) {
+            // If both are 0, force seconds to 1 (or revert to previous valid state if we tracked it, 
+            // but for simplicity, force seconds to 1)
+            paceSecInput.value = 1;
+        }
+    }
+
+    if (paceMinInput) {
+        paceMinInput.addEventListener('change', validatePace);
+    }
+    if (paceSecInput) {
+        paceSecInput.addEventListener('change', validatePace);
     }
 
     window.addEventListener('click', (event) => {
