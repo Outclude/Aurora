@@ -304,8 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const paceSec = parseInt(paceSecInput.value, 10) || 0;
 
         const payload = {
-            type: 1,// 1是电脑传给硬件的数据，包括步频和配速
-            //2是硬件传给电脑的数据，包括时间和距离
+            type: 1,
             cadence: cadence,
             pace_min: paceMin,
             pace_sec: paceSec

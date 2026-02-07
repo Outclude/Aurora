@@ -2,9 +2,13 @@
 #include "ble_server.h"
 #include <Arduino.h>
 #include "cJSON.h"
-#include "rotate.h"
+#include "data.h"
+
 // 定义特性回调类
 class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
+    MyBLEServer* pServer;
+public:
+    MyCharacteristicCallbacks(MyBLEServer* server) : pServer(server) {}
     void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) override {
         std::string value = pCharacteristic->getValue();
         
@@ -19,24 +23,32 @@ class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
                 if (rendered != NULL) {
                     Serial.printf("Parsed JSON Object:\n%s\n", rendered);
                     
-                    // 示例：尝试获取 "content" 字段（如果存在）
-                    cJSON *content = cJSON_GetObjectItem(root, "content");
-                    if (cJSON_IsString(content) && (content->valuestring != NULL)) {
-                        Serial.printf("Content field: %s\n", content->valuestring);
-                    }
 
-                    // 获取并更新 standard_speed
-                    cJSON *speed = cJSON_GetObjectItem(root, "speed");
-                    if (cJSON_IsNumber(speed)) {
-                        standard_speed = speed->valueint;
-                        Serial.printf("Updated standard_speed to: %d\n", standard_speed);
-                    }
+                    // 检查 type 是否为 1 (配置更新)
+                    cJSON *type = cJSON_GetObjectItem(root, "type");
+                    if (cJSON_IsNumber(type) && type->valueint == 1) {
+                        // 获取并更新 cadence
+                        cJSON *cadence = cJSON_GetObjectItem(root, "cadence");
+                        if (cJSON_IsNumber(cadence)) {
+                            SystemData::getInstance().setCadence(cadence->valueint);
+                        }
 
-                    // 获取并更新 standard_speed
-                    cJSON *speed = cJSON_GetObjectItem(root, "speed");
-                    if (cJSON_IsNumber(speed)) {
-                        standard_speed = speed->valueint;
-                        Serial.printf("Updated standard_speed to: %d\n", standard_speed);
+                        // 获取并更新 pace_min
+                        cJSON *paceMin = cJSON_GetObjectItem(root, "pace_min");
+                        if (cJSON_IsNumber(paceMin)) {
+                            SystemData::getInstance().setPaceMin(paceMin->valueint);
+                        }
+
+                        // 获取并更新 pace_sec
+                        cJSON *paceSec = cJSON_GetObjectItem(root, "pace_sec");
+                        if (cJSON_IsNumber(paceSec)) {
+                            SystemData::getInstance().setPaceSec(paceSec->valueint);
+                        }
+
+                        Serial.printf("Updated settings: Cadence=%d, Pace=%d'%d''\n", 
+                            SystemData::getInstance().getCadence(),
+                            SystemData::getInstance().getPaceMin(),
+                            SystemData::getInstance().getPaceSec());
                     }
                     
                     free(rendered); // 释放 cJSON_Print 分配的内存
@@ -70,7 +82,7 @@ void MyBLEServer::setup() { // 移除参数
         SERVER_CHARREAD_UUID,
         NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
     );
-    pReadCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
+    pReadCharacteristic->setCallbacks(new MyCharacteristicCallbacks(this));
     
     // 创建写/通知特性（保持原样）
     pWriteCharacteristic = pService->createCharacteristic(
@@ -79,7 +91,7 @@ void MyBLEServer::setup() { // 移除参数
     );
     
     // 设置回调以处理写入事件
-    pWriteCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
+    pWriteCharacteristic->setCallbacks(new MyCharacteristicCallbacks(this));
     
     // 启动服务
     pService->start();
