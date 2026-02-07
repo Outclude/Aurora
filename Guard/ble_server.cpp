@@ -1,13 +1,42 @@
 // ble_server.cpp
 #include "ble_server.h"
 #include <Arduino.h>
+#include "cJSON.h"
 
 // 定义特性回调类
 class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
     void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) override {
         std::string value = pCharacteristic->getValue();
-        if (!value.empty()) {
-            Serial.printf("Received string: %s\n", value.c_str());
+        
+        if (value.length() > 0) {
+            Serial.printf("Received raw value: %s\n", value.c_str());
+            
+            // 解析 JSON
+            cJSON *root = cJSON_Parse(value.c_str());
+            if (root != NULL) {
+                // 解析成功，打印格式化后的 JSON 字符串以验证
+                char *rendered = cJSON_Print(root);
+                if (rendered != NULL) {
+                    Serial.printf("Parsed JSON Object:\n%s\n", rendered);
+                    
+                    // 示例：尝试获取 "content" 字段（如果存在）
+                    cJSON *content = cJSON_GetObjectItem(root, "content");
+                    if (cJSON_IsString(content) && (content->valuestring != NULL)) {
+                        Serial.printf("Content field: %s\n", content->valuestring);
+                    }
+                    
+                    free(rendered); // 释放 cJSON_Print 分配的内存
+                }
+                cJSON_Delete(root); // 释放 cJSON 对象内存
+            } else {
+                // 解析失败处理
+                const char *error_ptr = cJSON_GetErrorPtr();
+                if (error_ptr != NULL) {
+                    Serial.printf("JSON Parse Error before: %s\n", error_ptr);
+                } else {
+                    Serial.println("JSON Parse Error: Unknown error");
+                }
+            }
         } else {
             Serial.println("Received empty string.");
         }
@@ -62,7 +91,7 @@ void MyBLEServer::sendString(const std::string& str) {
             Serial.printf("Sent string: %s\n", str.c_str());
         } 
         else {
-            Serial.println("No client subscribed, string updated but not notified.");
+            Serial.println("NN client subscribed, string updated but not notified.");
         }
     }
 }

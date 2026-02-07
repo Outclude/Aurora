@@ -17,6 +17,6 @@ void setup() {
 
 void loop() {
   // 示例：在循环中每1秒发送一个测试字符串
-  bleServer.sendString("Hello from ESP32!");
+  bleServer.sendString("Hi from ESP32!");
   delay(1000);
 }
