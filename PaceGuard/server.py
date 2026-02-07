@@ -191,7 +191,7 @@ def serve_static(path):
     return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
-    # Run on port 2333 to match previous configuration
+    # Run on port 2334 to match previous configuration
     print("Starting PaceGuard Server (Python/Flask)...")
-    print("Running at http://localhost:2333")
-    app.run(host='0.0.0.0', port=2333, debug=True)
+    print("Running at http://localhost:2334")
+    app.run(host='0.0.0.0', port=2334, debug=True)
