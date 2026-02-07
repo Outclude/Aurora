@@ -9,13 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Chat Elements
     const chatContainer = document.getElementById('chatContainer');
-    const connectedDeviceName = document.getElementById('connectedDeviceName');
+    // const connectedDeviceName = document.getElementById('connectedDeviceName'); // Removed
     const disconnectBtn = document.getElementById('disconnectBtn');
     const messageLog = document.getElementById('messageLog');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const connectionStatusEl = document.querySelector('.connection-status');
-    const connectionStatusText = connectionStatusEl ? connectionStatusEl.querySelector('span') : null;
+    const statusText = document.getElementById('statusText'); // Added
+
+    // Running Controls
+    const runningControls = document.getElementById('runningControls');
+    const cadenceInput = document.getElementById('cadenceInput');
+    const paceMinInput = document.getElementById('paceMinInput');
+    const paceSecInput = document.getElementById('paceSecInput');
+    const syncSettingsBtn = document.getElementById('syncSettingsBtn');
+    const resultTime = document.getElementById('resultTime');
+    const resultDistance = document.getElementById('resultDistance');
 
     let pollInterval = null;
     let isConnected = false;
@@ -88,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Show connecting state
         if (chatContainer) chatContainer.style.display = 'flex';
-        if (connectedDeviceName) connectedDeviceName.textContent = `连接中: ${device.name}...`;
+        if (statusText) statusText.textContent = `连接中...`;
         appendSystemMessage(`正在连接到 ${device.name} (${device.address})...`);
 
         try {
@@ -101,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.status === 'connected') {
                 isConnected = true;
-                if (connectedDeviceName) connectedDeviceName.textContent = device.name;
+                if (statusText) statusText.textContent = device.name;
                 updateConnectionUI(true);
                 appendSystemMessage('已连接。');
                 startPolling();
@@ -111,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Connection error:', error);
             appendSystemMessage(`连接错误: ${error.message}`);
-            if (connectedDeviceName) connectedDeviceName.textContent = '连接失败';
+            if (statusText) statusText.textContent = '连接失败';
             updateConnectionUI(false);
         }
     }
@@ -125,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateConnectionUI(false);
         appendSystemMessage('已断开连接。');
         stopPolling();
-        if (connectedDeviceName) connectedDeviceName.textContent = '未连接';
+        if (statusText) statusText.textContent = '未连接';
         // Keep chat window open but indicate disconnection, or maybe just update UI
     }
 
@@ -133,10 +142,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (connectionStatusEl) {
             if (connected) {
                 connectionStatusEl.classList.add('connected');
-                if (connectionStatusText) connectionStatusText.textContent = '已连接';
+                if (scanBtn) scanBtn.style.display = 'none';
+                if (disconnectBtn) disconnectBtn.style.display = 'flex';
+                if (runningControls) runningControls.style.display = 'flex';
+                if (chatContainer) chatContainer.style.display = 'flex';
             } else {
                 connectionStatusEl.classList.remove('connected');
-                if (connectionStatusText) connectionStatusText.textContent = '未连接';
+                if (scanBtn) scanBtn.style.display = 'flex';
+                if (disconnectBtn) disconnectBtn.style.display = 'none';
+                if (runningControls) runningControls.style.display = 'none';
+                // chatContainer logic: maybe keep it but disable? Or hide? 
+                // User said "连上ble设备后...显示". Implies hidden otherwise.
+                // But previous code kept it open. Let's hide it on disconnect to be clean, 
+                // or just leave it as is if I want to show history.
+                // For now, I will hide it to match "show after connected".
+                if (chatContainer) chatContainer.style.display = 'none';
             }
         }
     }
@@ -198,6 +218,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     messages.forEach(msg => {
                         // Handle both string messages (legacy/simple) and object messages
                         const content = typeof msg === 'object' && msg.content ? msg.content : msg;
+
+                        // Parse JSON for result display
+                        try {
+                            const data = JSON.parse(content);
+                            if (data && data.type === 2) {
+                                if (data.time !== undefined && resultTime) {
+                                    const totalSeconds = parseInt(data.time, 10);
+                                    if (!isNaN(totalSeconds)) {
+                                        const minutes = Math.floor(totalSeconds / 60);
+                                        const seconds = totalSeconds % 60;
+                                        resultTime.value = `${minutes}'${seconds}''`;
+                                    } else {
+                                        resultTime.value = data.time;
+                                    }
+                                }
+                                if (data.distance !== undefined && resultDistance) {
+                                    const meters = parseFloat(data.distance);
+                                    if (!isNaN(meters)) {
+                                        const km = (meters / 1000).toFixed(2);
+                                        resultDistance.value = km;
+                                    } else {
+                                        resultDistance.value = data.distance;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Ignore non-JSON messages
+                        }
+
                         appendMessage(content, 'received');
                     });
                 }
@@ -224,6 +273,43 @@ document.addEventListener('DOMContentLoaded', () => {
         pollInterval = null;
     }
 
+    // --- Settings ---
+    async function sendSettings() {
+        if (!cadenceInput || !paceMinInput || !paceSecInput) return;
+
+        const cadence = parseInt(cadenceInput.value, 10) || 0;
+        const paceMin = parseInt(paceMinInput.value, 10) || 0;
+        const paceSec = parseInt(paceSecInput.value, 10) || 0;
+
+        const payload = {
+            type: 1,// 1是电脑传给硬件的数据，包括步频和配速
+            //2是硬件传给电脑的数据，包括时间和距离
+            cadence: cadence,
+            pace_min: paceMin,
+            pace_sec: paceSec
+        };
+        
+        const message = JSON.stringify(payload);
+        
+        try {
+            const response = await fetch('/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'sent') {
+                appendMessage(message, 'sent');
+                appendSystemMessage('设置已同步');
+            } else {
+                appendSystemMessage(`同步失败: ${result.error}`);
+            }
+        } catch (error) {
+            appendSystemMessage(`同步错误: ${error.message}`);
+        }
+    }
+
     // --- Event Listeners ---
     if (scanBtn) scanBtn.addEventListener('click', openModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
@@ -231,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (disconnectBtn) disconnectBtn.addEventListener('click', disconnectDevice);
     if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+    if (syncSettingsBtn) syncSettingsBtn.addEventListener('click', sendSettings);
     if (messageInput) {
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();

@@ -19,8 +19,8 @@ async def scan_ble_devices():
         name = device.name if device.name else "Unknown Device"
         # 从 adv_data 中获取 rssi
         rssi = adv_data.rssi 
-        if (device.address=='84:1F:E8:8D:C9:D6'):
-            print(f"{name:<30} | {device.address:<40} | {rssi} dBm")
+        #if (device.address=='84:1F:E8:8D:C9:D6'):
+        print(f"{name:<30} | {device.address:<40} | {rssi} dBm")
 
 if __name__ == "__main__":
     try:

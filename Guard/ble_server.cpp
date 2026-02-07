@@ -2,7 +2,7 @@
 #include "ble_server.h"
 #include <Arduino.h>
 #include "cJSON.h"
-
+#include "rotate.h"
 // 定义特性回调类
 class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
     void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) override {
@@ -23,6 +23,20 @@ class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
                     cJSON *content = cJSON_GetObjectItem(root, "content");
                     if (cJSON_IsString(content) && (content->valuestring != NULL)) {
                         Serial.printf("Content field: %s\n", content->valuestring);
+                    }
+
+                    // 获取并更新 standard_speed
+                    cJSON *speed = cJSON_GetObjectItem(root, "speed");
+                    if (cJSON_IsNumber(speed)) {
+                        standard_speed = speed->valueint;
+                        Serial.printf("Updated standard_speed to: %d\n", standard_speed);
+                    }
+
+                    // 获取并更新 standard_speed
+                    cJSON *speed = cJSON_GetObjectItem(root, "speed");
+                    if (cJSON_IsNumber(speed)) {
+                        standard_speed = speed->valueint;
+                        Serial.printf("Updated standard_speed to: %d\n", standard_speed);
                     }
                     
                     free(rendered); // 释放 cJSON_Print 分配的内存
@@ -88,7 +102,7 @@ void MyBLEServer::sendString(const std::string& str) {
         // 如果有订阅者，发送通知
         if (pReadCharacteristic->getSubscribedCount() > 0) {
             pReadCharacteristic->notify();
-            Serial.printf("Sent string: %s\n", str.c_str());
+            //Serial.printf("Sent string: %s\n", str.c_str());
         } 
         else {
             Serial.println("NN client subscribed, string updated but not notified.");

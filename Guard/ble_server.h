@@ -4,6 +4,7 @@
 #include <NimBLEDevice.h>
 #include <string>
 
+
 // 自定义服务和特性UUID
 //#define SERVER_SERVICE_UUID "12345678-ABCD-EFGH-IJKL-0123456789AB"
 //#define SERVER_CHAR_UUID "00000001-ABCD-EFGH-IJKL-0123456789AB"
