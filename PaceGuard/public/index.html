@@ -28,7 +28,11 @@
 
         <!-- Running Controls -->
         <div id="runningControls" class="card settings-card" style="display: none;">
-            <div class="settings-header">跑步设置</div>
+            <div class="settings-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-weight: bold;">跑步设置</span>
+                <textarea id="runningStatusArea" readonly style="width: 140px; height: 32px; resize: none; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; font-family: inherit; font-size: 16px; font-weight: bold; color: #FF0000; line-height: 22px; overflow: hidden; white-space: nowrap;"></textarea>
+            </div>
+            
             <div class="settings-body">
                 <div class="setting-item">
                     <label>步频 (步/分钟)</label>
@@ -46,7 +50,7 @@
                         <span class="separator">''</span>
                     </div>
                 </div>
-                <button id="syncSettingsBtn" class="btn-primary">发送数据</button>
+                <button id="syncSettingsBtn" class="btn-primary">同步目标</button>
             </div>
             
             <div class="settings-header" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">结果展示</div>
@@ -63,6 +67,12 @@
                         <input type="text" id="resultDistance" readonly value="--" style="background-color: var(--bg-secondary); cursor: default;">
                     </div>
                 </div>
+            </div>
+            
+            <div class="settings-header" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">跑步控制</div>
+            <div class="settings-body" style="display: flex; gap: 12px; margin-top: 8px;">
+                <button id="runControlBtn" class="btn-primary" style="flex: 1;">开始跑步</button>
+                <button id="stopRunBtn" class="btn-primary" style="flex: 1; background-color: #dc3545; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);">结束跑步</button>
             </div>
         </div>
 

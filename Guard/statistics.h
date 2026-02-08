@@ -3,7 +3,6 @@
 
 struct statistics
 {
-    int time;
     int distance;
 };
 

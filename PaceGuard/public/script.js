@@ -25,9 +25,109 @@ document.addEventListener('DOMContentLoaded', () => {
     const syncSettingsBtn = document.getElementById('syncSettingsBtn');
     const resultTime = document.getElementById('resultTime');
     const resultDistance = document.getElementById('resultDistance');
+    const runningStatusArea = document.getElementById('runningStatusArea');
+    const runControlBtn = document.getElementById('runControlBtn');
+    const stopRunBtn = document.getElementById('stopRunBtn');
 
     let pollInterval = null;
     let isConnected = false;
+    let waitingForResponse = false;
+    let responseTimeout = null;
+
+    // Timer Variables
+    let runState = 0; // 0: Stopped, 1: Running, 2: Paused
+    let pendingRunState = null; // Store intended state while waiting for confirmation
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+
+    // Format time as x'xx''
+    function formatTime(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        return `${m}'${s.toString().padStart(2, '0')}''`;
+    }
+
+    function updateTimer() {
+        elapsedSeconds++;
+        if (resultTime) resultTime.value = formatTime(elapsedSeconds);
+    }
+
+    // Apply run state changes (UI update)
+    function applyRunState(newState) {
+        if (newState === 1) {
+            // Running
+            if (runState === 0) {
+                // Reset timer if starting from stopped
+                elapsedSeconds = 0;
+                if (resultTime) resultTime.value = formatTime(0);
+            }
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            if (runControlBtn) runControlBtn.textContent = '暂停跑步';
+        } else if (newState === 2) {
+            // Paused
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            if (runControlBtn) runControlBtn.textContent = '继续跑步';
+        } else if (newState === 0) {
+            // Stopped
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            if (runControlBtn) runControlBtn.textContent = '开始跑步';
+        }
+        runState = newState;
+    }
+
+    async function sendRunCommand(type) {
+        const payload = { type: type };
+        const message = JSON.stringify(payload);
+        try {
+            await fetch('/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            // We can add log if needed, but requirements didn't explicitly ask for log on every click, 
+            // but implied sending JSON.
+        } catch (error) {
+            console.error('Send run command error:', error);
+            appendSystemMessage(`指令发送失败: ${error.message}`);
+        }
+    }
+
+    if (runControlBtn) {
+        runControlBtn.addEventListener('click', () => {
+            let nextState = runState;
+            let commandType = -1;
+
+            if (runState === 0) {
+                // Start Running
+                nextState = 1;
+                commandType = 1;
+            } else if (runState === 1) {
+                // Pause Running
+                nextState = 2;
+                commandType = 2;
+            } else if (runState === 2) {
+                // Resume Running
+                nextState = 1;
+                commandType = 3;
+            }
+
+            if (commandType !== -1) {
+                pendingRunState = nextState;
+                sendRunCommand(commandType);
+            }
+        });
+    }
+
+    if (stopRunBtn) {
+        stopRunBtn.addEventListener('click', () => {
+            // Stop Running
+            pendingRunState = 0;
+            sendRunCommand(4);
+        });
+    }
 
     // Check initial connection status
     async function checkInitialStatus() {
@@ -244,17 +344,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Parse JSON for result display
                         try {
                             const data = JSON.parse(content);
-                            if (data && data.type === 2) {
-                                if (data.time !== undefined && resultTime) {
-                                    const totalSeconds = parseInt(data.time, 10);
-                                    if (!isNaN(totalSeconds)) {
-                                        const minutes = Math.floor(totalSeconds / 60);
-                                        const seconds = totalSeconds % 60;
-                                        resultTime.value = `${minutes}'${seconds}''`;
-                                    } else {
-                                        resultTime.value = data.time;
+
+                            // Handle Status Response
+                            if (data.msg) {
+                                if (waitingForResponse) {
+                                    if (data.msg === 'Update_OK') {
+                                        if (runningStatusArea) runningStatusArea.value = '同步成功';
+                                        waitingForResponse = false;
+                                        if (responseTimeout) clearTimeout(responseTimeout);
+                                    } else if (data.msg === 'Update_Error') {
+                                        if (runningStatusArea) runningStatusArea.value = '同步失败，请重试';
+                                        waitingForResponse = false;
+                                        if (responseTimeout) clearTimeout(responseTimeout);
                                     }
                                 }
+                                
+                                // Handle Run Control Confirmation
+                                if (data.msg === 'Status_OK' && pendingRunState !== null) {
+                                    applyRunState(pendingRunState);
+                                    pendingRunState = null;
+                                }
+                            }
+                            
+                            if (data) {
                                 if (data.distance !== undefined && resultDistance) {
                                     const meters = parseFloat(data.distance);
                                     if (!isNaN(meters)) {
@@ -299,15 +411,28 @@ document.addEventListener('DOMContentLoaded', () => {
     async function sendSettings() {
         if (!cadenceInput || !paceMinInput || !paceSecInput) return;
 
+        if (runningStatusArea) {
+            runningStatusArea.value = '同步中';
+            waitingForResponse = true;
+            if (responseTimeout) clearTimeout(responseTimeout);
+            responseTimeout = setTimeout(() => {
+                if (waitingForResponse) {
+                    runningStatusArea.value = '同步失败，请重试';
+                    waitingForResponse = false;
+                }
+            }, 3000);
+        }
+
         const cadence = parseInt(cadenceInput.value, 10) || 0;
         const paceMin = parseInt(paceMinInput.value, 10) || 0;
         const paceSec = parseInt(paceSecInput.value, 10) || 0;
 
+        const totalPaceSec = (paceMin * 60) + paceSec;
+
         const payload = {
-            type: 1,
+            type : 0,
             cadence: cadence,
-            pace_min: paceMin,
-            pace_sec: paceSec
+            pace_sec: totalPaceSec
         };
         
         const message = JSON.stringify(payload);

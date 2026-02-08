@@ -1,7 +1,7 @@
 #include "data.h"
 
-// 构造函数初始化
-SystemData::SystemData() : cadence(0), pace_min(0), pace_sec(0) {}
+// 构造函数初始化   
+SystemData::SystemData() : {}
 
 // 获取单例实例
 SystemData& SystemData::getInstance() {
@@ -13,14 +13,24 @@ SystemData& SystemData::getInstance() {
 int SystemData::getCadence() const { return cadence; }
 void SystemData::setCadence(int val) { cadence = val; }
 
-int SystemData::getPaceMin() const { return pace_min; }
-void SystemData::setPaceMin(int val) { pace_min = val; }
+double SystemData::getCurrentSpeed() const { return current_speed; }
+void SystemData::setCurrentSpeed(double val) { current_speed = val; }
 
-int SystemData::getPaceSec() const { return pace_sec; }
-void SystemData::setPaceSec(int val) { pace_sec = val; }
+double SystemData::getGoalSpeed() const { return goal_speed; }
+void SystemData::setGoalSpeed(double val) { goal_speed = val; }
 
-int SystemData::getSumTime() const { return sum_time; }
-void SystemData::setSumTime(int val) { sum_time = val; }
+double SystemData::getDistance() const { return distance; }
+void SystemData::setDistance(double val) { distance = val; }
 
-int SystemData::getDistance() const { return distance; }
-void SystemData::setDistance(int val) { distance = val; }
+double SystemData::getLastDistance() const { return last_distance; }
+void SystemData::setLastDistance(double val) { last_distance = val; }
+
+//游戏模式
+double SystemData::getSumDistance() const { return sumDistance; }
+void SystemData::setSumDistance(double val) { sumDistance = val; }
+
+double SystemData::getRewardDistance() const { return rewardDistance; }
+void SystemData::setRewardDistance(double val) { rewardDistance = val; }
+
+bool SystemData::getStopRun() const { return stopRun; }
+void SystemData::setStopRun(bool val) { stopRun = val; }

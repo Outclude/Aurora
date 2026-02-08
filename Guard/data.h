@@ -10,17 +10,28 @@ public:
     int getCadence() const;
     void setCadence(int val);
 
-    int getPaceMin() const;
-    void setPaceMin(int val);
+    double getCurrentSpeed() const;
+    void setCurrentSpeed(double val);
 
-    int getPaceSec() const;
-    void setPaceSec(int val);
+    double getGoalSpeed() const;
+    void setGoalSpeed(double val);
 
-    int getSumTime() const;
-    void setSumTime(int val);
+    double getDistance() const;
+    void setDistance(double val);
 
-    int getDistance() const;
-    void setDistance(int val);
+    double getLastDistance() const;
+    void setLastDistance(double val);
+
+
+    //游戏模式
+    double getSumDistance() const;
+    void setSumDistance(double val);
+
+    double getRewardDistance() const;
+    void setRewardDistance(double val);
+
+    bool getStopRun() const;
+    void setStopRun(bool val);
 
 private:
     SystemData(); // Private constructor
@@ -28,12 +39,20 @@ private:
     // 禁止拷贝
     SystemData(const SystemData&) = delete;
     SystemData& operator=(const SystemData&) = delete;
-
+    //配速模式
     volatile int cadence;
-    volatile int pace_min;
-    volatile int pace_sec;
-    volatile int sum_time;
-    volatile int distance;
+    volatile double current_speed;
+    volatile double goal_speed;
+    
+
+    //游戏模式
+    volatile int sumDistance;
+    volatile int rewardDistance;
+
+    //公共部分
+    volatile double distance;
+    volatile double last_distance;
+    volatile bool stopRun;
 };
 
 #endif

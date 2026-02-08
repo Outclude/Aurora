@@ -1,21 +1,13 @@
 // ble_server.cpp
 #include "ble_server.h"
 #include <Arduino.h>
-#include "ble_handler.h"
 
 // 定义特性回调类
 class MyCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
-    MyBLEServer* pServer;
-public:
-    MyCharacteristicCallbacks(MyBLEServer* server) : pServer(server) {}
     void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) override {
         std::string value = pCharacteristic->getValue();
-        
-        if (value.length() > 0) {
-            std::string response = BLEHandler::handleMessage(value);
-            if (!response.empty()) {
-                pServer->sendString(response);
-            }
+        if (!value.empty()) {
+            Serial.printf("Received string: %s\n", value.c_str());
         } else {
             Serial.println("Received empty string.");
         }
@@ -35,7 +27,7 @@ void MyBLEServer::setup() { // 移除参数
         SERVER_CHARREAD_UUID,
         NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
     );
-    pReadCharacteristic->setCallbacks(new MyCharacteristicCallbacks(this));
+    pReadCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
     
     // 创建写/通知特性（保持原样）
     pWriteCharacteristic = pService->createCharacteristic(
@@ -44,7 +36,7 @@ void MyBLEServer::setup() { // 移除参数
     );
     
     // 设置回调以处理写入事件
-    pWriteCharacteristic->setCallbacks(new MyCharacteristicCallbacks(this));
+    pWriteCharacteristic->setCallbacks(new MyCharacteristicCallbacks());
     
     // 启动服务
     pService->start();
@@ -67,10 +59,10 @@ void MyBLEServer::sendString(const std::string& str) {
         // 如果有订阅者，发送通知
         if (pReadCharacteristic->getSubscribedCount() > 0) {
             pReadCharacteristic->notify();
-            //Serial.printf("Sent string: %s\n", str.c_str());
+            Serial.printf("Sent string: %s\n", str.c_str());
         } 
         else {
-            Serial.println("NN client subscribed, string updated but not notified.");
+            Serial.println("No client subscribed, string updated but not notified.");
         }
     }
 }
