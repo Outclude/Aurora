@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (runControlBtn) {
                 runControlBtn.textContent = '暂停跑步';
                 runControlBtn.className = 'btn-primary btn-pause';
+                resultDistance.value = '--';
             }
         } else if (newState === 2) {
             // Paused
@@ -428,6 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Settings ---
     function toggleMode() {
+        if (runState !== 0) {
+            if (runningStatusArea) runningStatusArea.value = '跑步中，无法切换';
+            return;
+        }
+
         isGameMode = !isGameMode;
         if (isGameMode) {
             if (runningSettingsTitle) runningSettingsTitle.textContent = '跑步设置（游戏模式）';
@@ -447,6 +453,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function sendSettings() {
+        if (runState !== 0) {
+            if (runningStatusArea) runningStatusArea.value = '跑步中，无法同步';
+            return;
+        }
+
         if (!cadenceInput) return;
         
         // Validation check
