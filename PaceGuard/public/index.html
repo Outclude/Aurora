@@ -29,28 +29,33 @@
         <!-- Running Controls -->
         <div id="runningControls" class="card settings-card" style="display: none;">
             <div class="settings-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <span style="font-weight: bold;">跑步设置</span>
+                <span id="runningSettingsTitle" style="font-weight: bold;">跑步设置（配速模式）</span>
                 <textarea id="runningStatusArea" readonly style="width: 140px; height: 32px; resize: none; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; font-family: inherit; font-size: 16px; font-weight: bold; color: #FF0000; line-height: 22px; overflow: hidden; white-space: nowrap;"></textarea>
             </div>
             
             <div class="settings-body">
                 <div class="setting-item">
-                    <label>步频 (步/分钟)</label>
+                    <label id="cadenceLabel">步频 (步/分钟)</label>
                     <div class="input-wrapper">
                         <input type="number" id="cadenceInput" value="180" placeholder="180" min="1">
-                        <span class="unit">SPM</span>
+                        <span id="cadenceUnit" class="unit">SPM</span>
                     </div>
                 </div>
                 <div class="setting-item">
-                    <label>配速 (min'sec''/km)</label>
-                    <div class="pace-input-wrapper">
+                    <label id="paceLabel">配速 (min'sec''/km)</label>
+                    <div id="paceInputContainer" class="pace-input-wrapper">
                         <input type="number" id="paceMinInput" value="5" placeholder="5" min="0">
                         <span class="separator">'</span>
                         <input type="number" id="paceSecInput" value="30" placeholder="30" min="0" max="59">
                         <span class="separator">''</span>
                     </div>
+                    <div id="gameRewardInputContainer" class="input-wrapper" style="display: none;">
+                        <input type="number" id="rewardDistanceInput" value="100" placeholder="100" min="1">
+                        <span class="unit">m</span>
+                    </div>
                 </div>
                 <button id="syncSettingsBtn" class="btn-primary">同步目标</button>
+                <button id="switchModeBtn" class="btn-secondary" style="margin-top: 8px;">切换模式</button>
             </div>
             
             <div class="settings-header" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">结果展示</div>
@@ -71,8 +76,8 @@
             
             <div class="settings-header" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">跑步控制</div>
             <div class="settings-body" style="display: flex; gap: 12px; margin-top: 8px;">
-                <button id="runControlBtn" class="btn-primary" style="flex: 1;">开始跑步</button>
-                <button id="stopRunBtn" class="btn-primary" style="flex: 1; background-color: #dc3545; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);">结束跑步</button>
+                <button id="runControlBtn" class="btn-primary btn-start" style="flex: 1;">开始跑步</button>
+                <button id="stopRunBtn" class="btn-primary btn-stop" style="flex: 1;">结束跑步</button>
             </div>
         </div>
 

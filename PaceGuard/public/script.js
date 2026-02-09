@@ -19,6 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Running Controls
     const runningControls = document.getElementById('runningControls');
+    const runningSettingsTitle = document.getElementById('runningSettingsTitle');
+    const cadenceLabel = document.getElementById('cadenceLabel');
+    const cadenceUnit = document.getElementById('cadenceUnit');
+    const paceLabel = document.getElementById('paceLabel');
+    const paceInputContainer = document.getElementById('paceInputContainer');
+    const gameRewardInputContainer = document.getElementById('gameRewardInputContainer');
+    const rewardDistanceInput = document.getElementById('rewardDistanceInput');
+    const switchModeBtn = document.getElementById('switchModeBtn');
+    
     const cadenceInput = document.getElementById('cadenceInput');
     const paceMinInput = document.getElementById('paceMinInput');
     const paceSecInput = document.getElementById('paceSecInput');
@@ -33,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isConnected = false;
     let waitingForResponse = false;
     let responseTimeout = null;
+    let isGameMode = false;
 
     // Timer Variables
     let runState = 0; // 0: Stopped, 1: Running, 2: Paused
@@ -63,17 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
-            if (runControlBtn) runControlBtn.textContent = '暂停跑步';
+            if (runControlBtn) {
+                runControlBtn.textContent = '暂停跑步';
+                runControlBtn.className = 'btn-primary btn-pause';
+            }
         } else if (newState === 2) {
             // Paused
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
-            if (runControlBtn) runControlBtn.textContent = '继续跑步';
+            if (runControlBtn) {
+                runControlBtn.textContent = '继续跑步';
+                runControlBtn.className = 'btn-primary btn-resume';
+            }
         } else if (newState === 0) {
             // Stopped
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
-            if (runControlBtn) runControlBtn.textContent = '开始跑步';
+            if (runControlBtn) {
+                runControlBtn.textContent = '开始跑步';
+                runControlBtn.className = 'btn-primary btn-start';
+            }
         }
         runState = newState;
     }
@@ -408,8 +427,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Settings ---
+    function toggleMode() {
+        isGameMode = !isGameMode;
+        if (isGameMode) {
+            if (runningSettingsTitle) runningSettingsTitle.textContent = '跑步设置（游戏模式）';
+            if (cadenceLabel) cadenceLabel.textContent = '总距离 (m)';
+            if (cadenceUnit) cadenceUnit.textContent = 'm';
+            if (paceLabel) paceLabel.textContent = '奖励距离 (m)';
+            if (paceInputContainer) paceInputContainer.style.display = 'none';
+            if (gameRewardInputContainer) gameRewardInputContainer.style.display = 'flex';
+        } else {
+            if (runningSettingsTitle) runningSettingsTitle.textContent = '跑步设置（配速模式）';
+            if (cadenceLabel) cadenceLabel.textContent = '步频 (步/分钟)';
+            if (cadenceUnit) cadenceUnit.textContent = 'SPM';
+            if (paceLabel) paceLabel.textContent = '配速 (min\'sec\'\'/km)';
+            if (paceInputContainer) paceInputContainer.style.display = 'flex';
+            if (gameRewardInputContainer) gameRewardInputContainer.style.display = 'none';
+        }
+    }
+
     async function sendSettings() {
-        if (!cadenceInput || !paceMinInput || !paceSecInput) return;
+        if (!cadenceInput) return;
+        
+        // Validation check
+        if (!isGameMode) {
+             if (!paceMinInput || !paceSecInput) return;
+        } else {
+             if (!rewardDistanceInput) return;
+        }
 
         if (runningStatusArea) {
             runningStatusArea.value = '同步中';
@@ -423,17 +468,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 3000);
         }
 
-        const cadence = parseInt(cadenceInput.value, 10) || 0;
-        const paceMin = parseInt(paceMinInput.value, 10) || 0;
-        const paceSec = parseInt(paceSecInput.value, 10) || 0;
+        let payload = {};
 
-        const totalPaceSec = (paceMin * 60) + paceSec;
-
-        const payload = {
-            type : 0,
-            cadence: cadence,
-            pace_sec: totalPaceSec
-        };
+        if (isGameMode) {
+             const sumDistance = parseInt(cadenceInput.value, 10) || 0;
+             const rewardDistance = parseInt(rewardDistanceInput.value, 10) || 0;
+             payload = {
+                 type: 5,
+                 sumDistance: sumDistance,
+                 rewardDistance: rewardDistance
+             };
+        } else {
+            const cadence = parseInt(cadenceInput.value, 10) || 0;
+            const paceMin = parseInt(paceMinInput.value, 10) || 0;
+            const paceSec = parseInt(paceSecInput.value, 10) || 0;
+            const totalPaceSec = (paceMin * 60) + paceSec;
+    
+            payload = {
+                type : 0,
+                cadence: cadence,
+                pace_sec: totalPaceSec
+            };
+        }
         
         const message = JSON.stringify(payload);
         
@@ -457,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
+    if (switchModeBtn) switchModeBtn.addEventListener('click', toggleMode);
     if (scanBtn) scanBtn.addEventListener('click', openModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (refreshScanBtn) refreshScanBtn.addEventListener('click', startScan);
@@ -482,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (cadenceInput) validateInput(cadenceInput, 1);
+    if (rewardDistanceInput) validateInput(rewardDistanceInput, 1);
     
     // Pace validation: allow 0, but check combined > 0
     function validatePace() {

@@ -1,7 +1,7 @@
 #include "data.h"
 
 // 构造函数初始化   
-SystemData::SystemData() : {}
+SystemData::SystemData() {}
 
 // 获取单例实例
 SystemData& SystemData::getInstance() {

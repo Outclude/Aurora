@@ -293,8 +293,29 @@ body {
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-    transition: transform 0.1s, box-shadow 0.1s;
+    transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
     width: 100%;
+}
+
+.btn-start {
+    background-color: #28a745 !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+}
+
+.btn-pause {
+    background-color: #ffc107 !important;
+    color: #000 !important; /* Ensure readable text on yellow */
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3) !important;
+}
+
+.btn-resume {
+    background-color: skyblue !important; /* Same as start or maybe blue #007bff? User didn't specify, green makes sense for 'Go' */
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+}
+
+.btn-stop {
+    background-color: #dc3545 !important;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
 }
 
 .btn-primary:active {
