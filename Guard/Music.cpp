@@ -6,6 +6,7 @@
 #include "freertos/task.h"
 
 static TaskHandle_t music_task_handle = NULL;
+static volatile bool stop_music_flag = false;
 
 void MusicPlay(int id){
     const unsigned char* currentData = NULL;
@@ -30,6 +31,10 @@ void MusicPlay(int id){
     int chunkSize = 512; // Write in chunks
   
     for (int i = 0; i < dataSize; i += chunkSize) {
+        if (stop_music_flag) {
+            I2S_Clear(); // 立即清空缓冲区，防止残留噪音
+            return;
+        }
         int remaining = dataSize - i;
         int toWrite = (remaining < chunkSize) ? remaining : chunkSize;
         I2S_Write((char*)(currentData + i), toWrite);
@@ -40,6 +45,10 @@ void MusicPlay(int id){
     char silence[512];
     memset(silence, 0, sizeof(silence));
     for (int i = 0; i < 10; i++) { // 发送足够多的静音数据 (5120 bytes)
+        if (stop_music_flag) {
+            I2S_Clear();
+            return;
+        }
         I2S_Write(silence, sizeof(silence));
     }
 }
@@ -53,8 +62,13 @@ void music_task(void *pvParameters) {
 
 void MusicPlayAsync(int id) {
     if (music_task_handle != NULL) {
-        vTaskDelete(music_task_handle);
-        music_task_handle = NULL;
+        stop_music_flag = true;
+        while (music_task_handle != NULL) {
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+        }
+        stop_music_flag = false;
     }
+    I2S_Clear(); // 确保新任务开始前缓冲区干净
+    stop_music_flag = false;
     xTaskCreate(music_task, "music_task", 4096, (void*)id, 5, &music_task_handle);
 }

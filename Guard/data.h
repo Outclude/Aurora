@@ -32,6 +32,9 @@ public:
 
     bool getStopRun() const;
     void setStopRun(bool val);
+    
+    int getMode() const;
+    void setMode(int val);
 
 private:
     SystemData(); // Private constructor
@@ -53,6 +56,7 @@ private:
     volatile double distance;
     volatile double last_distance;
     volatile bool stopRun;
+    volatile int mode;
 };
 
 #endif

@@ -26,18 +26,9 @@ void game_rotate_loop() {
         reward_dist = 100; 
     }
 
-    // 1. 检查是否达成总距离
-    if (last_dist < sum_dist && current_dist >= sum_dist) {
-        horn_2();
-    }
-
     // 2. 检查是否达成奖励距离 (跨越了新的奖励段)
     int last_segment = (int)(last_dist / reward_dist);
     int current_segment = (int)(current_dist / reward_dist);
-
-    if (current_segment > last_segment) {
-        horn_1();
-    }
 
     // 3. 计算角度 (180 -> 0)
     // 计算当前段内的进度距离

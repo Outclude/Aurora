@@ -28,3 +28,7 @@ void I2S_Write(char* data, int numData) {
     i2s_write((i2s_port_t)0, (const char *)data, numData, &bytes_written, portMAX_DELAY);
 }
 
+void I2S_Clear() {
+    i2s_zero_dma_buffer((i2s_port_t)0);
+}
+

@@ -34,3 +34,6 @@ void SystemData::setRewardDistance(double val) { rewardDistance = val; }
 
 bool SystemData::getStopRun() const { return stopRun; }
 void SystemData::setStopRun(bool val) { stopRun = val; }
+
+int SystemData::getMode() const { return mode; }
+void SystemData::setMode(int val) { mode = val; }

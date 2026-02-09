@@ -9,3 +9,4 @@
 
 void I2S_Init();
 void I2S_Write(char* data, int numData);
+void I2S_Clear();

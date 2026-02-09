@@ -24,6 +24,7 @@ std::string BLEHandler::handleMessage(const std::string& message) {
         }
         Serial.printf("Parsed JSON Object:\n%s\n", rendered);
         if (type == 0) {
+            SystemData::getInstance().setMode(0);
             // Get and update cadence
             cJSON *cadence = cJSON_GetObjectItem(root, "cadence");
             if (cJSON_IsNumber(cadence)) {
@@ -71,6 +72,7 @@ std::string BLEHandler::handleMessage(const std::string& message) {
             //暂停跑步，存储上一次距离
             SystemData::getInstance().setLastDistance(SystemData::getInstance().getDistance());
             SystemData::getInstance().setStopRun(true);
+            sendStatistics();
             cJSON* json = cJSON_CreateObject();
             cJSON_AddStringToObject(json, "msg", "Status_OK");
             char* jsonStr = cJSON_Print(json);
@@ -106,6 +108,7 @@ std::string BLEHandler::handleMessage(const std::string& message) {
             }
             cJSON_Delete(json);
         }else if (type == 5) {
+            SystemData::getInstance().setMode(1);
             //设置游戏模式目标
             cJSON *sumDistance = cJSON_GetObjectItem(root, "sumDistance");
             if (cJSON_IsNumber(sumDistance)) {

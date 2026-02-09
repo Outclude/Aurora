@@ -8,7 +8,7 @@
 #include "servo.h"
 #include "Music.h"
 #include "I2S.h"
-
+#include "game_sound.h"
 
 MyBLEServer bleServer;
 
@@ -25,4 +25,12 @@ void setup() {
 }
 
 void loop() {
+    int mode = SystemData::getInstance().getMode();
+    if (mode == 0) {
+        // 配速模式
+        rotate_loop();
+    } else {
+        // 游戏模式
+        game_rotate_loop();
+    }
 }
