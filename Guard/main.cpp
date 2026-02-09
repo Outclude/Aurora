@@ -47,6 +47,7 @@ volatile double yu_she_pei_su = 3.00; // m/s
 volatile int game_sumDistance = 1000;      // m
 volatile int game_rewardDistance = 80;     // m
 volatile double game_yu_she_pei_su = 3.00; // m/s
+volatile double game_lastDistance = 0.00;  //m
 
 typedef struct
 {
@@ -93,6 +94,7 @@ void setup()
   xTaskCreatePinnedToCore(TaskBlink8, "TaskBlink8", 4096, NULL, 1, NULL, 0);   // Serial print
   xTaskCreatePinnedToCore(TaskBlink9, "TaskBlink9", 4096, NULL, 1, NULL, 1);   // audio output
   xTaskCreatePinnedToCore(TaskBlink10, "TaskBlink10", 4096, NULL, 1, NULL, 1); // uptime counter
+  xTaskCreatePinnedToCore(TaskBlink11, "TaskBlink11", 4096, NULL, 1, NULL, 1); // gameloop
 }
 
 void loop()
@@ -237,6 +239,8 @@ void TaskBlink6(void *pvParameters)
 
       case 1: // 开始跑步
       {
+        SystemData::getInstance().setLastDistance(0);
+        SystemData::getInstance().setDistance(0);
         g_keep_running = true;
         StaticJsonDocument<64> okDoc;
         okDoc["msg"] = "Status_OK";

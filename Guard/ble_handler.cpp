@@ -55,7 +55,6 @@ std::string BLEHandler::handleMessage(const std::string& message) {
             cJSON_Delete(json);
         }else if (type == 1) {
             //开始跑步
-            MusicPlayAsync(0);
             //重置距离
             SystemData::getInstance().setLastDistance(0);
             SystemData::getInstance().setDistance(0);
@@ -97,7 +96,6 @@ std::string BLEHandler::handleMessage(const std::string& message) {
         }else if (type == 4) {
             //结束跑步，发送数据到前端
             SystemData::getInstance().setStopRun(true);
-            MusicPlayAsync(1);
             sendStatistics();
             cJSON* json = cJSON_CreateObject();
             cJSON_AddStringToObject(json, "msg", "Status_OK");
