@@ -7,9 +7,9 @@ void reward_sound(){
     static bool oncePlay = false;
     static double last_dist = 0;
     // Get data (using double for calculation precision)
-    double current_dist = SystemData::getInstance().getDistance();
-    double reward_dist = SystemData::getInstance().getRewardDistance();
-    double sum_dist = SystemData::getInstance().getSumDistance();
+    double current_dist = RunStats_t.total_distance_m;
+    double reward_dist = game_rewardDistance;
+    double sum_dist = game_sumDistance;
 
     if (current_dist < last_dist) {
         last_dist = 0;

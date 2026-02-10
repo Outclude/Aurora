@@ -9,7 +9,7 @@ void rotate_loop() {
     double current_speed;
     double goal_speed;
     current_speed = SystemData::getInstance().getCurrentSpeed();
-    goal_speed = SystemData::getInstance().getGoalSpeed();
+    goal_speed = yu_she_pei_su;
 
     int angle;
     // 防止除以0（嵌入式中必须处理，避免程序崩溃）

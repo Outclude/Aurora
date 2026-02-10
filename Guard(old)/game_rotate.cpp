@@ -18,21 +18,16 @@ void game_rotate_loop() {
     
     // Get data (using double for calculation precision)
     double current_dist = RunStats_t.total_distance_m;
-    double reward_dist = SystemData::getInstance().getRewardDistance();
-    double sum_dist = SystemData::getInstance().getSumDistance();
+    double reward_dist = game_rewardDistance;
+    double sum_dist = game_sumDistance;
 
     // Safety check to avoid division by zero
     if (reward_dist <= 0) {
         reward_dist = 100; 
     }
 
-    // 2. 检查是否达成奖励距离 (跨越了新的奖励段)
-    int last_segment = (int)(last_dist / reward_dist);
-    int current_segment = (int)(current_dist / reward_dist);
-
-    // 3. 计算角度 (基于速度差异)
     double current_speed = SystemData::getInstance().getCurrentSpeed();
-    double goal_speed = SystemData::getInstance().getGoalSpeed();
+    double goal_speed = yu_she_pei_su;
     
     int angle = 90;
 
@@ -45,7 +40,6 @@ void game_rotate_loop() {
     if (angle < 0) angle = 0;
     if (angle > 180) angle = 180;
 
-    servoWriteAngle(angle);
-
+    g_servo_angle = angle;
     last_dist = current_dist;
 }

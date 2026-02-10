@@ -1,19 +1,19 @@
 #ifndef __MY_SERVO_H__
 #define __MY_SERVO_H__
 
-#include <Arduino.h>
+#include <stdint.h>
 
-#define SERVO_PIN      23
-#define SERVO_FREQ     50      
-#define SERVO_RES      16
-#define SERVO_CHANNEL  1
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-#define SERVO_MIN_US   500
-#define SERVO_MAX_US   2500
+    /* ========= 接口 ========= */
+    void Servo_Init(void);
+    void Servo_SetAngle(int angle); // 0~180°
 
-void servo_setup();
-void servo_loop();
-// 新增声明
-void servoWriteAngle(int angle); 
+#ifdef __cplusplus
+}
+#endif
 
-#endif // __MY_SERVO_H__
+#endif

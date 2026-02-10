@@ -19,7 +19,7 @@
 #define SAMPLE_RATE 8000
 #define WAV_HEADER_SIZE 44
 #define I2S_CHUNK 256
-static constexpr double EARTH_RADIUS = 6371000.0;
+
 static int16_t audio_buf[I2S_CHUNK];
 
 void TaskBlink1(void *pvParameters);
@@ -32,37 +32,10 @@ void TaskBlink7(void *pvParameters);
 void TaskBlink8(void *pvParameters);
 void TaskBlink9(void *pvParameters);
 void TaskBlink10(void *pvParameters);
-void TaskBlink11(void *pvParameters);
 void TaskBlink12(void *pvParameters);
 void TaskBlink13(void *pvParameters);
+void TaskBlink14(void *pvParameters);
 void play_wav_array(const unsigned char *wav, unsigned int wav_len);
-
-double degToRad(double degrees)
-{
-  return degrees * PI / 180.0;
-}
-
-double gps_comopute(double lat1, double lon1, double lat2, double lon2)
-{
-  // 将角度转换为弧度
-  double lat1_rad = degToRad(lat1);
-  double lon1_rad = degToRad(lon1);
-  double lat2_rad = degToRad(lat2);
-  double lon2_rad = degToRad(lon2);
-
-  // 计算差值
-  double dlat = lat2_rad - lat1_rad;
-  double dlon = lon2_rad - lon1_rad;
-
-  // Haversine公式
-  double a = sin(dlat / 2.0) * sin(dlat / 2.0) +
-             cos(lat1_rad) * cos(lat2_rad) *
-                 sin(dlon / 2.0) * sin(dlon / 2.0);
-
-  double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
-
-  return EARTH_RADIUS * c;
-}
 
 MyBLEServer bleServer;
 volatile int g_servo_angle = 90;
@@ -74,21 +47,17 @@ volatile uint32_t g_uptime_sec = 0;
 volatile int shan_shuo_jian_ge = 100; // ms
 volatile double yu_she_pei_su = 3.00; // m/s
 
-volatile double start_jingdu = 0.00; // 起始点的精度
-volatile double start_weidu = 0.00;  // 起始点的纬度
-volatile int start_time = 0;         // 起始点的时刻
-volatile double distance = 0.00;     // 起始点到现在位置的距离
-
 volatile int game_sumDistance = 1000;      // m
 volatile int game_rewardDistance = 80;     // m
 volatile double game_yu_she_pei_su = 3.00; // m/s
-volatile int lastDistance = 0; // 上一次的暂停前的距离
+volatile double game_lastDistance = 0.00;  //m
+volatile int mode = 0; // 0: 配速模式，1: 游戏模式
 
 typedef struct
 {
   uint32_t total_distance_m; // 本次跑步总路程（米，整数）
   uint32_t total_time_s;     // 本次跑步总时间（秒，整数）
-  float avg_speed_mps;       // 上一段的瞬时速度
+  float avg_speed_mps;       // 平均配速（m/s，保留 2 位小数）
 } RunStats_t;
 
 volatile RunStats_t g_run_stats = {
@@ -113,9 +82,7 @@ void setup()
   GPS_Init();
   delay(100);
   Servo_Init();
-  delay(1000);
-  Servo_SetAngle(90);
-  delay(1000);
+  delay(100);
   audio_i2s_init();
   delay(100);
 
@@ -131,9 +98,7 @@ void setup()
   xTaskCreatePinnedToCore(TaskBlink8, "TaskBlink8", 4096, NULL, 1, NULL, 0);   // Serial print
   xTaskCreatePinnedToCore(TaskBlink9, "TaskBlink9", 4096, NULL, 1, NULL, 1);   // audio output
   xTaskCreatePinnedToCore(TaskBlink10, "TaskBlink10", 4096, NULL, 1, NULL, 1); // uptime counter
-  xTaskCreatePinnedToCore(TaskBlink11, "TaskBlink11", 4096, NULL, 1, NULL, 1); // gps dis get
-  xTaskCreatePinnedToCore(TaskBlink12, "TaskBlink12", 4096, NULL, 1, NULL, 1); // normal mode
-  xTaskCreatePinnedToCore(TaskBlink13, "TaskBlink13", 4096, NULL, 1, NULL, 1); // game mode
+  xTaskCreatePinnedToCore(TaskBlink11, "TaskBlink11", 4096, NULL, 1, NULL, 1); // gameloop
 }
 
 void loop()
@@ -254,8 +219,25 @@ void TaskBlink6(void *pvParameters)
       {
       case 0: // 设置配速模式目标
       {
-        g_game_state = false;
         int cadence = doc["cadence"] | 0;
+        int pace_sec = doc["pace_sec"] | 0; 
+
+        if (cadence == 0 && pace_sec == 0)
+        {
+          StaticJsonDocument<64> Doc;
+          Doc["msg"] = "Update_Error";
+          char Buf[64];
+          serializeJson(Doc, Buf, sizeof(Buf));
+          bleServer.sendString(Buf);
+          break;
+        }else{
+          StaticJsonDocument<64> Doc;
+          Doc["msg"] = "Update_OK";
+          char Buf[64];
+          serializeJson(Doc, Buf, sizeof(Buf));
+          bleServer.sendString(Buf);
+        }
+
         if (cadence <= 0)
         {
           shan_shuo_jian_ge = 500;
@@ -265,7 +247,7 @@ void TaskBlink6(void *pvParameters)
           shan_shuo_jian_ge = (int)(60000 / cadence); // 步频转间隔，单位 ms
         }
 
-        int pace_sec = doc["pace_sec"] | 0;
+        
         if (pace_sec > 0)
         {
           yu_she_pei_su = 1000.0 / pace_sec;
@@ -279,15 +261,14 @@ void TaskBlink6(void *pvParameters)
 
       case 1: // 开始跑步
       {
-        lastDistance = 0;
-        g_run_stats.total_distance_m = 0;
+        SystemData::getInstance().setLastDistance(0);
+        g_run_stats.totalDistance = 0;
         g_keep_running = true;
         StaticJsonDocument<64> okDoc;
         okDoc["msg"] = "Status_OK";
         char okBuf[64];
         serializeJson(okDoc, okBuf, sizeof(okBuf));
         bleServer.sendString(okBuf);
-        g_keep_running = true;
         break;
       }
 
@@ -299,7 +280,6 @@ void TaskBlink6(void *pvParameters)
         char okBuf[64];
         serializeJson(okDoc, okBuf, sizeof(okBuf));
         bleServer.sendString(okBuf);
-        g_keep_running = false;
         break;
       }
 
@@ -311,7 +291,6 @@ void TaskBlink6(void *pvParameters)
         char okBuf[64];
         serializeJson(okDoc, okBuf, sizeof(okBuf));
         bleServer.sendString(okBuf);
-        g_keep_running = true;
         break;
       }
 
@@ -323,12 +302,6 @@ void TaskBlink6(void *pvParameters)
         char okBuf[64];
         serializeJson(okDoc, okBuf, sizeof(okBuf));
         bleServer.sendString(okBuf);
-        g_keep_running = false;
-        StaticJsonDocument<128> distDoc;
-        distDoc["distance"] = g_run_stats.total_distance_m;
-        char distBuf[128];
-        serializeJson(distDoc, distBuf, sizeof(distBuf));
-        bleServer.sendString(distBuf);
         break;
       }
 
@@ -432,92 +405,12 @@ void TaskBlink11(void *pvParameters)
 {
   while (true)
   {
-    distance = gps_comopute(start_weidu, start_jingdu, gps_lat, gps_lng);
-    if (distance >= 50.000)
+    if (g_keep_running)
     {
-      int delta_t = g_uptime_sec - start_time;
-      g_run_stats.total_distance_m += (uint32_t)distance;
-      g_run_stats.total_time_s += delta_t;
-      g_run_stats.avg_speed_mps = (float)distance / delta_t;
-      start_jingdu = gps_lng;
-      start_weidu = gps_lat;
-      start_time = g_uptime_sec;
+      // 游戏循环
+      game_loop();
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));
-  }
-}
-
-void vTaskBlink12(void *pvParameters)
-{
-  while (true)
-  {
-    if (!g_game_state && g_keep_running){
-      double current_speed;
-      double goal_speed;
-      current_speed = g_run_stats.avg_speed_mps;
-      goal_speed = yu_she_pei_su;
-
-      int angle;
-      // 防止除以0（嵌入式中必须处理，避免程序崩溃）
-      if (goal_speed <= 0) {
-          angle = 90; // 目标速度为0时，默认角度90
-      } else {
-          // 计算速度偏差比例：(目标速度 - 当前速度)/目标速度
-          // 偏差为正（当前速度 < 目标速度）→ 角度增大；偏差为负（当前速度 > 目标速度）→ 角度减小
-          double ratio = double(goal_speed - current_speed) / goal_speed;
-          // 基础角度90，偏差比例乘以90作为增量/减量，范围刚好0~180
-          angle = 90 + 90 * ratio;
-      }
-      g_servo_angle = angle;
-    }
-    vTaskDelay(pdMS_TO_TICKS(1000));
-  }
-}
-void vTaskBlink13(void *pvParameters)
-{
-  while (true)
-  {
-    if (g_game_state && g_keep_running){
-      static double last_dist = 0;
-      double current_dist = g_run_stats.total_distance_m;
-      double reward_dist = game_rewardDistance;
-      double sum_dist = game_sumDistance;
-
-      // Safety check to avoid division by zero
-      if (reward_dist <= 0) {
-          reward_dist = 100; 
-      }
-      int played = 0;
-      // 1. 检查是否达成总距离
-      if (last_dist < sum_dist && current_dist >= sum_dist) {
-        g_voice_value = 1;
-        played = 1;
-      }
-
-      // 2. 检查是否达成奖励距离 (跨越了新的奖励段)
-      int last_segment = (int)(last_dist / reward_dist);
-      int current_segment = (int)(current_dist / reward_dist);
-
-      if (current_segment > last_segment && !played) {
-        g_voice_value = 2;
-      }
-
-      // 3. 计算角度 (180 -> 0)
-      // 计算当前段内的进度距离
-      double dist_in_segment = current_dist - (current_segment * reward_dist);
-      
-      // 映射：距离越近(ratio越大)，角度越小
-      double ratio = dist_in_segment / reward_dist;
-      
-      // 限制范围并执行
-      int angle = (int)(180.0 * (1.0 - ratio));
-
-      if (angle < 0) angle = 0;
-      if (angle > 180) angle = 180;
-
-      g_servo_angle = angle;
-    }
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 
