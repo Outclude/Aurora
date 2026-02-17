@@ -1,39 +1,48 @@
-# 极客营
+# 极光--极客营项目
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+### 介绍
+一款专为跑者设计的胸佩戴式智能视觉配速投影仪。它通过激光发生器或高亮LED掩膜投影灯，夜间在跑者身前地面投射动态视觉信号（如激光配速线、跑动皮卡丘）。
+该产品集“专业训练辅助”与“沉浸式游戏体验”于一体，旨在解决跑步枯燥、配速难控的痛点，通过视觉引导实现“脱手机化”的沉浸式奔跑体验。
 
-#### 软件架构
-软件架构说明
+For 小白跑者： 游戏化激励（Gamification）。把枯燥的跑步变成“吃金币”游戏，通过多巴胺奖励机制延长坚持时间。
+For 进阶跑者： 可视化配速（Visual Pacing）。替代频繁低头看表的动作，提供直观的“虚拟兔子”领跑，稳定配速，冲击PB。
+For 所有夜跑者： 主动安全（Active Safety）。高亮投影兼具照明与警示功能。
 
+#### 功能说明 (Functional Requirements)
+##### 核心模式 (Core Modes)
+###### 专业配速模式 (Pro Pacer Mode)
+显示内容： 一条高亮激光红线。
+逻辑算法：
+用户在App设定目标配速（如 5:00/km）。
+设备GPS和IMU融合实时计算瞬时速度（更新频率）。
+动态补偿： 若用户跑慢了，光线前移（拉大距离）；若快了，光线后移（缩短距离）。
+###### 游戏化模式 (Gamified Mode)
+显示内容： 动态图标（双帧切换伪动效皮卡丘）。
+玩法逻辑：
+吃金币 (Coin Runner)： 地面远处投射皮卡丘图案。用户对阶段性目标的追逐时，图形不断靠近，直到实现目标时，图案正好移动到身前，喇叭播放奖励音效。
+技术难点： 图案移动与目标实现进度的协同。
+#### 安全机制 (Safety Features)
+跌倒检测 (Fall Detection)： IMU检测到瞬间失重+剧烈撞击+静止3秒 -> 自动触发SOS模式（投影仪以最高亮度快闪SOS摩斯电码，耳机最大音量警报）。
 
-#### 安装教程
+#### 软件与生态 (App & Ecosystem)
+手机App (The Configurator)目前是网页替代
+由于设备无屏，App承担所有设置与复盘功能：
+跑前 (Pre-run)：
+配对设备。
+设置训练计划（如“5公里跑的目标配速”）和新手阶段性目标。
+点击“同步到设备”。
+跑后 (Post-run)：
+设备重连手机，自动上传轨迹数据。
+可视化复盘： 不仅看轨迹，还能看“金币收集率”、“配速达成率”。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+### 软件架构
+PaceGuard为网页前端后端代码
+Guard为esp32开发板代码
+Guard(old)为旧版代码（已废弃）
 
-#### 使用说明
+### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+1.  将Guard文件夹工程通过arduino上传到esp32开发板
+2.  运行.venv\Scripts\activate进入虚拟环境
+3.  在PaceGuard文件夹中运行python server.py启动本地网页，通过浏览器访问localhost:2333打开
+4.  通过wav_to_header.py将wav文件转换为header文件，从而播放音效
