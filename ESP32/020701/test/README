@@ -1,0 +1,91 @@
+json格式
+Received BLE command: {"type":0,"cadence":180,"pace_sec":330}‘
+电脑端发送数据格式
+设置配速模式目标
+const payload = {
+    type : 0,
+    cadence: cadence,
+    pace_sec: paceSec
+};
+开始跑步
+const payload = {
+    type : 1
+};
+暂停跑步
+const payload = {
+    type : 2
+};
+继续跑步
+const payload = {
+    type : 3
+};
+结束跑步
+const payload = {
+    type : 4
+};
+设置游戏模式目标
+const payload = {
+    type : 5,
+    sumDistance: sumDistance,
+    rewardDistance: rewardDistance
+};
+
+
+硬件发送数据格式
+
+统计数据
+const payload = {
+    distance: distance
+};
+收到同步的回信
+const payload = {
+    msg: "Error/OK"
+};
+状态设置成功
+const payload = {
+    msg: "Status_OK"
+};
+
+
+void TaskBlink6(void *pvParameters)
+{
+  char rxBuf[BLE_RX_MAX_LEN];
+
+  bool enable = false;
+  int value = 90; // 默认三位数
+
+  while (true)
+  {
+    if (bleServer.recvString(rxBuf, sizeof(rxBuf), portMAX_DELAY))
+    {
+      size_t len = strlen(rxBuf);
+      printf("Received BLE command: %s\r\n", rxBuf);
+
+      /* -------- 第 1 位：bool -------- */
+      if (rxBuf[0] == '1')
+        g_light_enable = true;
+      else
+        g_light_enable = false;
+
+      /* -------- 第 2~4 位：三位数 -------- */
+      if (len >= 4)
+      {
+        char numStr[4];
+        numStr[0] = rxBuf[1];
+        numStr[1] = rxBuf[2];
+        numStr[2] = rxBuf[3];
+        numStr[3] = '\0';
+
+        g_servo_angle = atoi(numStr); // "024" -> 24
+      }
+      else
+      {
+        g_servo_angle = 90; // 长度不足用默认值
+      }
+
+      /* 示例 */
+      // g_light_enable = enable;
+      // g_light_value  = value;
+    }
+  }
+}
